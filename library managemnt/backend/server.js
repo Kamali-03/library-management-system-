@@ -1,4 +1,3 @@
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -8,23 +7,44 @@ require("dotenv").config();
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-
 const PORT = process.env.PORT || 5000;
-const MONGO_URI =
-  process.env.MONGO_URI || "mongodb://127.0.0.1:27017/bookbridge";
+const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// -------------------- CHECK ENVIRONMENT --------------------
+// Allow local and deployed frontend URLs
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  ...(process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(",").map((url) => url.trim())
+    : [])
+].filter(Boolean);
 
-if (!JWT_SECRET) {
-  console.error("Error: Add JWT_SECRET to backend/.env");
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    }
+  })
+);
+
+app.use(express.json());
+
+// CHECK ENVIRONMENT
+if (!MONGO_URI) {
+  console.error("Error: Add MONGO_URI to environment variables.");
   process.exit(1);
 }
 
-// -------------------- IMPORT MODELS --------------------
+if (!JWT_SECRET) {
+  console.error("Error: Add JWT_SECRET to environment variables.");
+  process.exit(1);
+}
 
+// IMPORT MODELS
 const User = require("./models/User");
 const Book = require("./models/Book");
 const Loan = require("./models/Loan");
@@ -32,8 +52,7 @@ const SeatBooking = require("./models/SeatBooking");
 const Exchange = require("./models/Exchange");
 const ActivityLog = require("./models/ActivityLog");
 
-// -------------------- CONSTANTS --------------------
-
+// CONSTANTS
 const VALID_SLOTS = [
   "09:00-11:00",
   "11:00-13:00",
@@ -41,8 +60,7 @@ const VALID_SLOTS = [
   "15:00-17:00"
 ];
 
-// -------------------- HELPER FUNCTIONS --------------------
-
+// HELPER FUNCTIONS
 function safeUser(user) {
   return {
     id: user._id,
@@ -81,8 +99,7 @@ async function logActivity(userId, action, details = "") {
   }
 }
 
-// -------------------- AUTHENTICATION MIDDLEWARE --------------------
-
+// AUTHENTICATION MIDDLEWARE
 function auth(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ")
@@ -115,8 +132,7 @@ function librarianOnly(req, res, next) {
   next();
 }
 
-// -------------------- BASIC ROUTES --------------------
-
+// BASIC ROUTES
 app.get("/", (req, res) => {
   res.json({
     message: "Welcome to BookBridge Library Management API."
@@ -133,8 +149,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// -------------------- STUDENT REGISTRATION --------------------
-
+// STUDENT REGISTRATION
 app.post("/api/auth/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -198,9 +213,7 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
-// -------------------- LIBRARIAN REGISTRATION --------------------
-
-// Librarian registration requires the private secret from .env.
+// LIBRARIAN REGISTRATION
 app.post("/api/auth/register-librarian", async (req, res) => {
   try {
     const {
@@ -273,8 +286,7 @@ app.post("/api/auth/register-librarian", async (req, res) => {
   }
 });
 
-// -------------------- LOGIN --------------------
-
+// LOGIN
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -327,8 +339,7 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// -------------------- CURRENT USER --------------------
-
+// CURRENT USER
 app.get("/api/auth/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -349,8 +360,7 @@ app.get("/api/auth/me", auth, async (req, res) => {
   }
 });
 
-// -------------------- GET BOOKS / SEARCH --------------------
-
+// GET BOOKS / SEARCH
 app.get("/api/books", auth, async (req, res) => {
   try {
     const search =
@@ -381,8 +391,7 @@ app.get("/api/books", auth, async (req, res) => {
   }
 });
 
-// -------------------- ADD BOOK --------------------
-
+// ADD BOOK
 app.post("/api/books", auth, librarianOnly, async (req, res) => {
   try {
     const {
@@ -448,8 +457,7 @@ app.post("/api/books", auth, librarianOnly, async (req, res) => {
   }
 });
 
-// -------------------- UPDATE BOOK --------------------
-
+// UPDATE BOOK
 app.put("/api/books/:id", auth, librarianOnly, async (req, res) => {
   try {
     if (!validId(req.params.id)) {
@@ -525,8 +533,7 @@ app.put("/api/books/:id", auth, librarianOnly, async (req, res) => {
   }
 });
 
-// -------------------- DELETE BOOK --------------------
-
+// DELETE BOOK
 app.delete("/api/books/:id", auth, librarianOnly, async (req, res) => {
   try {
     if (!validId(req.params.id)) {
@@ -567,8 +574,7 @@ app.delete("/api/books/:id", auth, librarianOnly, async (req, res) => {
   }
 });
 
-// -------------------- GET ONE BOOK / QR LOOKUP --------------------
-
+// GET ONE BOOK / QR LOOKUP
 app.get("/api/books/:id", auth, async (req, res) => {
   try {
     if (!validId(req.params.id)) {
@@ -592,9 +598,7 @@ app.get("/api/books/:id", auth, async (req, res) => {
     });
   }
 });
-
-// -------------------- GET LOANS --------------------
-
+// GET LOANS
 app.get("/api/loans", auth, async (req, res) => {
   try {
     const filter =
@@ -615,8 +619,7 @@ app.get("/api/loans", auth, async (req, res) => {
   }
 });
 
-// -------------------- ISSUE BOOK --------------------
-
+// ISSUE BOOK
 app.post("/api/loans/issue", auth, librarianOnly, async (req, res) => {
   try {
     const { bookId, studentEmail, dueDate } = req.body;
@@ -706,8 +709,7 @@ app.post("/api/loans/issue", auth, librarianOnly, async (req, res) => {
   }
 });
 
-// -------------------- RETURN BOOK --------------------
-
+// RETURN BOOK
 app.post("/api/loans/:id/return", auth, librarianOnly, async (req, res) => {
   try {
     if (!validId(req.params.id)) {
@@ -762,8 +764,7 @@ app.post("/api/loans/:id/return", auth, librarianOnly, async (req, res) => {
   }
 });
 
-// -------------------- GET SEAT BOOKINGS --------------------
-
+// GET SEAT BOOKINGS
 app.get("/api/seats", auth, async (req, res) => {
   try {
     const { date } = req.query;
@@ -792,8 +793,7 @@ app.get("/api/seats", auth, async (req, res) => {
   }
 });
 
-// -------------------- BOOK A SEAT --------------------
-
+// BOOK A SEAT
 app.post("/api/seats", auth, async (req, res) => {
   try {
     const { seatNumber, date, slot } = req.body;
@@ -852,8 +852,7 @@ app.post("/api/seats", auth, async (req, res) => {
   }
 });
 
-// -------------------- CANCEL SEAT BOOKING --------------------
-
+// CANCEL SEAT BOOKING
 app.post("/api/seats/:id/cancel", auth, async (req, res) => {
   try {
     if (!validId(req.params.id)) {
@@ -899,8 +898,7 @@ app.post("/api/seats/:id/cancel", auth, async (req, res) => {
   }
 });
 
-// -------------------- MY SEAT BOOKINGS --------------------
-
+// MY SEAT BOOKINGS
 app.get("/api/my-seats", auth, async (req, res) => {
   try {
     const filter =
@@ -920,8 +918,7 @@ app.get("/api/my-seats", auth, async (req, res) => {
   }
 });
 
-// -------------------- GET EXCHANGE REQUESTS --------------------
-
+// GET EXCHANGE REQUESTS
 app.get("/api/exchanges", auth, async (req, res) => {
   try {
     const filter =
@@ -942,8 +939,7 @@ app.get("/api/exchanges", auth, async (req, res) => {
   }
 });
 
-// -------------------- CREATE EXCHANGE REQUEST --------------------
-
+// CREATE EXCHANGE REQUEST
 app.post("/api/exchanges", auth, async (req, res) => {
   try {
     const { bookId, message } = req.body;
@@ -988,8 +984,7 @@ app.post("/api/exchanges", auth, async (req, res) => {
   }
 });
 
-// -------------------- UPDATE EXCHANGE STATUS --------------------
-
+// UPDATE EXCHANGE STATUS
 app.patch("/api/exchanges/:id", auth, librarianOnly, async (req, res) => {
   try {
     if (!validId(req.params.id)) {
@@ -1037,8 +1032,7 @@ app.patch("/api/exchanges/:id", auth, librarianOnly, async (req, res) => {
   }
 });
 
-// -------------------- DASHBOARD STATISTICS --------------------
-
+// DASHBOARD STATISTICS
 app.get("/api/dashboard", auth, async (req, res) => {
   try {
     const [
@@ -1114,8 +1108,7 @@ app.get("/api/dashboard", auth, async (req, res) => {
   }
 });
 
-// -------------------- ACTIVITY LOGS --------------------
-
+// ACTIVITY LOGS
 app.get("/api/logs", auth, librarianOnly, async (req, res) => {
   try {
     const logs = await ActivityLog.find()
@@ -1131,16 +1124,14 @@ app.get("/api/logs", auth, librarianOnly, async (req, res) => {
   }
 });
 
-// -------------------- HANDLE UNKNOWN ROUTES --------------------
-
+// HANDLE UNKNOWN ROUTES
 app.use((req, res) => {
   res.status(404).json({
     message: `Route not found: ${req.method} ${req.originalUrl}`
   });
 });
 
-// -------------------- GLOBAL ERROR HANDLER --------------------
-
+// GLOBAL ERROR HANDLER
 app.use((error, req, res, next) => {
   console.error("Server error:", error);
 
@@ -1153,8 +1144,7 @@ app.use((error, req, res, next) => {
   });
 });
 
-// -------------------- START SERVER --------------------
-
+// START SERVER
 async function startServer() {
   try {
     console.log("Connecting to MongoDB...");
@@ -1165,8 +1155,8 @@ async function startServer() {
     console.log(`Database: ${mongoose.connection.name}`);
 
     app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/api/health`);
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Health check: /api/health`);
     });
   } catch (error) {
     console.error("Startup failed:", error.message);
