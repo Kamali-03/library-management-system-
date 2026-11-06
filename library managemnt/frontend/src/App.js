@@ -5,7 +5,7 @@ import { Html5QrcodeScanner } from "html5-qrcode";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
-const API = "http://localhost:5000/api";
+const API = "https://library-management-system-dq5n.onrender.com/api";
 const SLOTS = [
   "09:00-11:00",
   "11:00-13:00",
@@ -564,13 +564,13 @@ export default function App() {
           >
             <span>
               {({
-                dashboard: "▦",
-                books: "▤",
-                qr: "▦",
-                exchange: "⇄",
-                seats: "▧",
-                loans: "▣",
-                logs: "☷"
+                dashboard: "â–¦",
+                books: "â–¤",
+                qr: "â–¦",
+                exchange: "â‡„",
+                seats: "â–§",
+                loans: "â–£",
+                logs: "â˜·"
               })[id]}
             </span>
             {label}
@@ -578,7 +578,7 @@ export default function App() {
         ))}
 
         <button className="bb-logout" onClick={logout}>
-          ↪ Sign out
+          â†ª Sign out
         </button>
       </aside>
 
@@ -606,7 +606,7 @@ export default function App() {
               className="bb-dismiss"
               onClick={() => setMessage("")}
             >
-              ×
+              Ã—
             </button>
           </div>
         )}
@@ -618,7 +618,7 @@ export default function App() {
               className="bb-dismiss"
               onClick={() => setError("")}
             >
-              ×
+              Ã—
             </button>
           </div>
         )}
@@ -628,7 +628,7 @@ export default function App() {
             <section className="bb-welcome">
               <div>
                 <p className="bb-kicker">
-                  BOOKS • KNOWLEDGE • COMMUNITY
+                  BOOKS â€¢ KNOWLEDGE â€¢ COMMUNITY
                 </p>
                 <h2>
                   {librarian
@@ -644,7 +644,7 @@ export default function App() {
                   className="bb-btn"
                   onClick={() => setTab("books")}
                 >
-                  Explore library →
+                  Explore library â†’
                 </button>
               </div>
 
@@ -711,13 +711,13 @@ export default function App() {
 
               <div className="bb-quick-grid">
                 {[
-                  ["books", "▤", "Search books", "Explore the collection"],
-                  ["qr", "▦", "QR book locator", "Scan or view book codes"],
-                  ["exchange", "⇄", "Book exchange", "Share your reading"],
-                  ["seats", "▧", "Reserve a seat", "Find a study space"],
+                  ["books", "â–¤", "Search books", "Explore the collection"],
+                  ["qr", "â–¦", "QR book locator", "Scan or view book codes"],
+                  ["exchange", "â‡„", "Book exchange", "Share your reading"],
+                  ["seats", "â–§", "Reserve a seat", "Find a study space"],
                   [
                     "loans",
-                    "▣",
+                    "â–£",
                     librarian ? "Issue & return" : "My borrowed books",
                     "Track book circulation"
                   ]
@@ -1007,7 +1007,7 @@ export default function App() {
 
         {tab === "exchange" && (
           <section className="bb-panel">
-            <p className="bb-kicker">READ • SHARE • REPEAT</p>
+            <p className="bb-kicker">READ â€¢ SHARE â€¢ REPEAT</p>
             <h3>Book Exchange</h3>
 
             <form
@@ -1044,7 +1044,7 @@ export default function App() {
 
                 {books.map(book => (
                   <option key={book._id} value={book._id}>
-                    {book.title} — {book.author}
+                    {book.title} â€” {book.author}
                   </option>
                 ))}
               </select>
@@ -1104,7 +1104,7 @@ export default function App() {
                     <tr key={item._id}>
                       <td>{item.book?.title}</td>
                       <td>{item.requester?.name || "Student"}</td>
-                      <td>{item.message || "—"}</td>
+                      <td>{item.message || "â€”"}</td>
                       <td>
                         <span className="bb-status">{item.status}</span>
                       </td>
@@ -1223,7 +1223,7 @@ export default function App() {
             </div>
 
             <p className="bb-muted mt-3">
-              Selected seat: <strong>{seat}</strong> · Slot:{" "}
+              Selected seat: <strong>{seat}</strong> Â· Slot:{" "}
               <strong>{slot}</strong>
             </p>
 
@@ -1378,7 +1378,7 @@ export default function App() {
                       <td>
                         {loan.returnDate
                           ? new Date(loan.returnDate).toLocaleDateString()
-                          : "—"}
+                          : "â€”"}
                       </td>
                       <td>
                         <span className="bb-status">
@@ -1445,7 +1445,7 @@ export default function App() {
                         {new Date(log.createdAt).toLocaleString()}
                       </td>
                       <td>{log.user?.name || "Unknown"}</td>
-                      <td>{log.user?.role || "—"}</td>
+                      <td>{log.user?.role || "â€”"}</td>
                       <td>{log.action}</td>
                       <td>{log.details}</td>
                     </tr>
@@ -1474,7 +1474,7 @@ export default function App() {
               className="bb-modal-close"
               onClick={() => setQrBook(null)}
             >
-              ×
+              Ã—
             </button>
 
             <p className="bb-kicker">UNIQUE BOOK IDENTIFIER</p>
